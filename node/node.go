@@ -7,9 +7,30 @@ import (
 
 type Node struct {
 	Value  []byte
-	left   *Node
-	right  *Node
+	Left   *Node
+	Right  *Node
 	Weight int64
+}
+
+func (n Node) ToArray() []*Node {
+	toCheck := []*Node{n.Left, n.Right}
+	rv := make([]*Node, 0, len(n.Value))
+
+	for len(toCheck) > 0 {
+		current := toCheck[0]
+		toCheck = toCheck[1:]
+
+		if current.IsLeaf() {
+			rv = append(rv, current)
+		} else {
+			toCheck = append(toCheck, current.Left)
+			toCheck = append(toCheck, current.Right)
+		}
+	}
+
+	sortNodes(rv)
+
+	return rv
 }
 
 func (n Node) ToString() string {
@@ -17,15 +38,15 @@ func (n Node) ToString() string {
 }
 
 func (n Node) IsLeaf() bool {
-	return n.left == nil || n.right == nil
+	return n.Left == nil || n.Right == nil
 }
 
 func (n Node) ChildContains(value []byte) (*Node, Bit) {
-	if bytes.Contains(n.left.Value, value) {
-		return n.left, ONE
+	if bytes.Contains(n.Left.Value, value) {
+		return n.Left, ONE
 	}
 
-	return n.right, ZERO
+	return n.Right, ZERO
 }
 
 func (n *Node) GetChild(bit Bit) *Node {
@@ -36,16 +57,16 @@ func (n *Node) GetChild(bit Bit) *Node {
 	var rv *Node
 	switch bit {
 	case ZERO:
-		rv = n.right
+		rv = n.Right
 
 	case ONE:
-		rv = n.left
+		rv = n.Left
 	}
 
 	return rv
 }
 
-func newNode(value []byte, left *Node, right *Node, weight int64) *Node {
+func NewNode(value []byte, left *Node, right *Node, weight int64) *Node {
 	_weight := weight
 
 	if left != nil && right != nil {
@@ -75,6 +96,6 @@ func PrintTree(node *Node, indent string, isLeft bool) {
 		newIndent += "    "
 	}
 
-	PrintTree(node.left, newIndent, true)
-	PrintTree(node.right, newIndent, false)
+	PrintTree(node.Left, newIndent, true)
+	PrintTree(node.Right, newIndent, false)
 }

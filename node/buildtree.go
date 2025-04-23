@@ -14,13 +14,11 @@ func BuildTree(stream []byte) *Node {
 	nodes := []*Node{}
 
 	for key := range ir {
-		node := newNode([]byte{key}, nil, nil, ir[key])
+		node := NewNode([]byte{key}, nil, nil, ir[key])
 		nodes = append(nodes, node)
 	}
 
-	sort.Slice(nodes, func(i, j int) bool {
-		return nodes[i].Weight < nodes[j].Weight
-	})
+	sortNodes(nodes)
 
 	for len(nodes) > 1 {
 		first := nodes[0]
@@ -28,18 +26,28 @@ func BuildTree(stream []byte) *Node {
 		vals := first.Value
 		vals = append(vals, second.Value...)
 
-		newNode := newNode(vals, first, second, 0)
+		newNode := NewNode(vals, first, second, 0)
 
 		nodes = nodes[2:]
 
 		nodes = append(nodes, newNode)
 
-		sort.Slice(nodes, func(i, j int) bool {
-			return nodes[i].Weight < nodes[j].Weight
-		})
+		sortNodes(nodes)
 	}
 
 	finalNode := nodes[0]
 
 	return finalNode
+}
+
+func sortNodes(nodes []*Node) {
+	sort.Slice(nodes, func(i, j int) bool {
+		if nodes[i].Weight != nodes[j].Weight {
+			return nodes[i].Weight < nodes[j].Weight
+		}
+		if len(nodes[i].Value) != len(nodes[j].Value) {
+			return len(nodes[i].Value) < len(nodes[j].Value)
+		}
+		return nodes[i].Value[0] < nodes[j].Value[0]
+	})
 }
