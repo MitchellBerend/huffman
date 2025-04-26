@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"huffman"
 	"huffman/node"
@@ -18,16 +19,21 @@ func main() {
 
 	fullTree := node.BuildTree(content)
 
-	compressed := huffman.Encode(content, fullTree)
+	// node.PrintTree(fullTree, "  ", false)
+	// for _, node := range fullTree.ToArray() {
+	// 	fmt.Printf("%s:%d\n", string(node.Value), node.Weight)
+	// }
 
+	treeBin := fullTree.ToBinary()
+	compressed := huffman.Encode(content, fullTree)
+	_ = os.WriteFile("tree", treeBin, 0666)
 	_ = os.WriteFile("compressed", compressed, 0666)
 
 	decoded := huffman.Decode(compressed, fullTree)
 
-	if !(string(content) == string(decoded)) {
-		// node.PrintTree(fullTree, "    ", false)
-		fmt.Printf("encoded:\n|%s|\n", content)
-		fmt.Printf("decoded:\n|%s|\n", decoded)
+	if !(bytes.Equal(content, decoded)) {
+		// fmt.Printf("encoded:\n|%s|\n", content)
+		// fmt.Printf("decoded:\n|%s|\n", decoded)
 	} else {
 		fmt.Println("correct round trip")
 	}

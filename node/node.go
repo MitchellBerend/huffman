@@ -7,13 +7,13 @@ import (
 
 type Node struct {
 	Value  []byte
-	Left   *Node
-	Right  *Node
-	Weight int64
+	left   *Node
+	right  *Node
+	Weight int
 }
 
 func (n Node) ToArray() []*Node {
-	toCheck := []*Node{n.Left, n.Right}
+	toCheck := []*Node{n.left, n.right}
 	rv := make([]*Node, 0, len(n.Value))
 
 	for len(toCheck) > 0 {
@@ -23,8 +23,8 @@ func (n Node) ToArray() []*Node {
 		if current.IsLeaf() {
 			rv = append(rv, current)
 		} else {
-			toCheck = append(toCheck, current.Left)
-			toCheck = append(toCheck, current.Right)
+			toCheck = append(toCheck, current.left)
+			toCheck = append(toCheck, current.right)
 		}
 	}
 
@@ -38,15 +38,15 @@ func (n Node) ToString() string {
 }
 
 func (n Node) IsLeaf() bool {
-	return n.Left == nil || n.Right == nil
+	return n.left == nil || n.right == nil
 }
 
 func (n Node) ChildContains(value []byte) (*Node, Bit) {
-	if bytes.Contains(n.Left.Value, value) {
-		return n.Left, ONE
+	if bytes.Contains(n.left.Value, value) {
+		return n.left, ONE
 	}
 
-	return n.Right, ZERO
+	return n.right, ZERO
 }
 
 func (n *Node) GetChild(bit Bit) *Node {
@@ -57,16 +57,33 @@ func (n *Node) GetChild(bit Bit) *Node {
 	var rv *Node
 	switch bit {
 	case ZERO:
-		rv = n.Right
+		rv = n.right
 
 	case ONE:
-		rv = n.Left
+		rv = n.left
 	}
 
 	return rv
 }
 
-func NewNode(value []byte, left *Node, right *Node, weight int64) *Node {
+// This produces a byte array that has the following format:
+// <byte><weight><byte><weight><byte><weight>
+// Where the first byte is the actual byte value from a leaf in the tree and
+// the second byte is the weight as a u8
+func (n Node) ToBinary() []byte {
+	bin := []byte{}
+
+	nodes := n.ToArray()
+
+	for _, node := range nodes {
+		bin = append(bin, node.Value[0])
+		bin = append(bin, byte(node.Weight))
+	}
+
+	return bin
+}
+
+func NewNode(value []byte, left *Node, right *Node, weight int) *Node {
 	_weight := weight
 
 	if left != nil && right != nil {
@@ -96,6 +113,6 @@ func PrintTree(node *Node, indent string, isLeft bool) {
 		newIndent += "    "
 	}
 
-	PrintTree(node.Left, newIndent, true)
-	PrintTree(node.Right, newIndent, false)
+	PrintTree(node.left, newIndent, true)
+	PrintTree(node.right, newIndent, false)
 }
