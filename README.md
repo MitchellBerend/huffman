@@ -17,10 +17,14 @@ he suggested just passing along the amount of padding bits, a maximum of 7, inst
 initial constraint where an encoded message could only be 2^64 bytes long, and it makes the encode
 bytestring 7 bytes shorter.
 
-# Todo
+~~# Todo~~
 
-What I still need to work on is a way to read and write the tree to/from disk. This means coming up
+~~What I still need to work on is a way to read and write the tree to/from disk. This means coming up
 with a binary format for the tree. The way the tree is created now is just counting all occurrences
 of a byte in a byte string and storing that in a hashmap as the weights. My initial implementation
 is to just store the byte and it's weight as byte pairs and writing that to disk. If the weight of
-any byte is more than the max an u8 int can store I will have to look at other solutions.
+any byte is more than the max an u8 int can store I will have to look at other solutions. ~~
+
+I ended up encoding the tree and an array of <byte><weight as u8> and just wrote that to a file.
+This made it possible to store and load back in the tree when running the program separately meaning
+I was also able to turn this into a cli quickly.
