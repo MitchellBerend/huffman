@@ -1,40 +1,69 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
 	"huffman"
 	"huffman/node"
 	"log"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 func main() {
-	content, err := os.ReadFile("test.txt")
-	if err != nil {
-		log.Fatal(err)
+	var rootCmd = &cobra.Command{Use: "codec"}
 
+	var encodeCmd = &cobra.Command{
+		Use:   "encode [input]",
+		Short: "Encode a string into a file",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			inputFilePath := args[0]
+
+			inputFileContent, err := os.ReadFile(inputFilePath)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			tree := node.BuildTree(inputFileContent)
+			encodedData := huffman.Encode(inputFileContent, tree)
+
+			_ = os.WriteFile(inputFilePath+".compressed", encodedData, 0666)
+			_ = os.WriteFile(inputFilePath+".tree", tree.ToBinary(), 0666)
+
+			return nil
+		},
 	}
-	// content := []byte("Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.")
 
-	fullTree := node.BuildTree(content)
+	var decodeCmd = &cobra.Command{
+		Use:   "decode [compressed path] [tree path] [output path]",
+		Short: "Decode a compressed file with a tree file",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			compressedPath := args[0]
+			treePath := args[1]
+			outputFilePath := args[2]
 
-	// node.PrintTree(fullTree, "  ", false)
-	// for _, node := range fullTree.ToArray() {
-	// 	fmt.Printf("%s:%d\n", string(node.Value), node.Weight)
-	// }
+			compressedContent, err := os.ReadFile(compressedPath)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-	treeBin := fullTree.ToBinary()
-	compressed := huffman.Encode(content, fullTree)
-	_ = os.WriteFile("tree", treeBin, 0666)
-	_ = os.WriteFile("compressed", compressed, 0666)
+			treeContent, err := os.ReadFile(treePath)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-	decoded := huffman.Decode(compressed, fullTree)
+			decodedData := huffman.Decode(compressedContent, node.BuildTreeFromBinary(treeContent))
+			_ = os.WriteFile(outputFilePath, decodedData, 0666)
 
-	if !(bytes.Equal(content, decoded)) {
-		// fmt.Printf("encoded:\n|%s|\n", content)
-		// fmt.Printf("decoded:\n|%s|\n", decoded)
-	} else {
-		fmt.Println("correct round trip")
+			return nil
+		},
+	}
+
+	rootCmd.AddCommand(encodeCmd, decodeCmd)
+
+	if err := rootCmd.Execute(); err != nil {
+		log.Println(err)
+		os.Exit(1)
 	}
 }
