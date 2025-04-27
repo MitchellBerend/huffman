@@ -23,7 +23,7 @@ bytestring 7 bytes shorter.
 with a binary format for the tree. The way the tree is created now is just counting all occurrences
 of a byte in a byte string and storing that in a hashmap as the weights. My initial implementation
 is to just store the byte and it's weight as byte pairs and writing that to disk. If the weight of
-any byte is more than the max an u8 int can store I will have to look at other solutions. ~~
+any byte is more than the max an u8 int can store I will have to look at other solutions.~~
 
 I ended up encoding the tree and an array of <byte><weight as u8> and just wrote that to a file.
 This made it possible to store and load back in the tree when running the program separately meaning
